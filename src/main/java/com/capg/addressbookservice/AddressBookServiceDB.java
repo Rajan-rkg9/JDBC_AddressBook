@@ -7,7 +7,9 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AddressBookServiceDB {
 	Contacts contactObj = null;
@@ -154,4 +156,23 @@ public class AddressBookServiceDB {
 		}
 		return contactsListByStartDate;
 	}
+	/**
+	 *UC19
+	 */
+	public Map<String,Integer> countContactsByCityOrState(String column) throws DBServiceException
+	{
+		Map<String,Integer> contactsCount = new HashMap<>();
+		String query = String.format("select %s , count(%s) from address_book group by %s;" , column,column,column);
+		try(Connection con = JDBC.getConnection()) {
+			PreparedStatement preparedStatement = con.prepareStatement(query);
+			ResultSet resultSet = preparedStatement.executeQuery();
+			while(resultSet.next())
+			{
+				contactsCount.put(resultSet.getString(1), resultSet.getInt(2));
+			}
+		}catch (Exception e) {
+			throw new DBServiceException("SQL Exception", DBServiceExceptionType.SQL_EXCEPTION);
+		}
+		return contactsCount;
+	}	
 }
