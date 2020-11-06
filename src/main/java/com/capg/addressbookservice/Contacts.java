@@ -1,6 +1,5 @@
 package com.capg.addressbookservice;
 
-
 public class Contacts {
 	private int id;
 	private String firstName;
@@ -8,7 +7,14 @@ public class Contacts {
 	private String address,zipCode,stateName;
 	private String phoneNumber;
 	private String addressType,address_name;
+	private String date;
 	
+	public String getDate() {
+		return date;
+	}
+	public void setDate(String date) {
+		this.date = date;
+	}
 	public int getId() {
 		return id;
 	}
@@ -75,6 +81,7 @@ public class Contacts {
 	public void setAddress_name(String address_name) {
 		this.address_name = address_name;
 	}
+	
 	public Contacts(int id,String firstName,String lastName,String address_name,String addressType,
 					String address,String cityName,String stateName,String zipCode,String phoneNumber, String emailId) {
 		super();
@@ -104,15 +111,17 @@ public class Contacts {
 		this.phoneNumber = phoneNo;
 		this.addressType = addressType;
 		this.address_name = address_name;
+		this.date = date;
 	}
+	
+	
 	@Override
 	public String toString() {
 		return "Contacts [id=" + id + ", firstName=" + firstName + ", lastName=" + lastName + ", emailId=" + emailId
 				+ ", cityName=" + cityName + ", address=" + address + ", zipCode=" + zipCode + ", stateName="
 				+ stateName + ", phoneNumber=" + phoneNumber + ", addressType=" + addressType + ", address_name="
-				+ address_name + "]";
+				+ address_name + ", date=" + date + "]";
 	}
-	
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

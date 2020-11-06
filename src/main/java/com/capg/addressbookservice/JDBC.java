@@ -12,7 +12,7 @@ public class JDBC {
 	/**
 	 * UC16
 	 */
-	public static Connection getConnection()
+	public synchronized static Connection getConnection()
 	{
 		try {
 			//Driver Loading

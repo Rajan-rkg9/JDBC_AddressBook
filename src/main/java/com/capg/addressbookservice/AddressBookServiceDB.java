@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -43,7 +44,6 @@ public class AddressBookServiceDB {
 		catch (Exception e) {
 			throw new DBServiceException("SQL Exception", DBServiceExceptionType.SQL_EXCEPTION);
 		}
-		System.out.println(contactsList);
 		return contactsList;
 	}
 	/**
@@ -119,6 +119,7 @@ public class AddressBookServiceDB {
 		catch (IndexOutOfBoundsException e) {
 		} 
 		catch (Exception e) {
+			e.printStackTrace();
 			throw new DBServiceException("SQL Exception", DBServiceExceptionType.SQL_EXCEPTION);
 		}
 		return false;
@@ -179,18 +180,67 @@ public class AddressBookServiceDB {
 	 * UC20
 	 */
 	public List<Contacts>  insertNewContactToDB(String firstName,String lastName,String address_name,String addressType,
-		String address,String city,String state,String zip,String phoneNo,String email,String date) throws DBServiceException {
-		String sql = String.format("insert into address_book (first_name,last_name,address_name,address_type,address,city,state,zip,phone_number,email,date_added)"+
-		" values ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');",firstName,lastName,address_name,addressType,address,city,state,zip,phoneNo,email,date);
-		try (Connection con = JDBC.getConnection()) {
-			PreparedStatement preparedStatement = con.prepareStatement(sql);
-			int result = preparedStatement.executeUpdate();
-			if (result == 1)
+												String address,String city,String state,String zip,String phoneNo,
+												String email,String date) throws DBServiceException {
+		int id = -1;
+		Connection con = null;
+		try {
+			con = JDBC.getConnection();
+			con.setAutoCommit(false);
+		}catch(SQLException e) {
+			e.printStackTrace();
+		}
+		String sql = String.format("insert into address_book (first_name,last_name,address_name,address_type,address,city,state,"
+									+ "zip,phone_number,email,date_added)"+
+									" values ('%s','%s','%s','%s','%s','%s','%s','%s','%s','%s','%s');",firstName,lastName,address_name,addressType,
+									address,city,state,zip,phoneNo,email,date);
+		try (Statement statement = con.createStatement()) {
+			int result = statement.executeUpdate(sql,statement.RETURN_GENERATED_KEYS);
+			if (result == 1) {
+				ResultSet resultSet = statement.getGeneratedKeys();
+				if(resultSet.next()) 
+					id =  resultSet.getInt(1);
 				contactObj = new Contacts(firstName,lastName,address_name,addressType,address,city,state,zip,phoneNo,email,date);
 				viewAddressBook().add(contactObj);
-		}catch (Exception e) {
-			throw new DBServiceException("SQL Exception", DBServiceExceptionType.SQL_EXCEPTION);
+				con.commit();
+			}
+		}catch (SQLException exception) {
+			exception.printStackTrace();
+			try {
+				con.rollback();
+				return viewAddressBook();
+			} catch (SQLException ex) {
+				throw new DBServiceException("SQL Exception", DBServiceExceptionType.SQL_EXCEPTION);
+			}
 		}
 		return viewAddressBook();
+	}
+	/**
+	 * UC21 Multithreading
+	 */
+	public void addMultipleContactsToDBUsingThreads(List<Contacts> record) {
+		Map<Integer,Boolean> addStatus = new HashMap<>();
+		for(Contacts contact:record) {
+			Runnable task = ()->{
+				addStatus.put(contact.hashCode(),false);
+				try {
+					insertNewContactToDB(contact.getFirstName(),contact.getLastName(),contact.getAddress_name(),contact.getAddressType(),
+							contact.getAddress(),contact.getCityName(), contact.getStateName(), contact.getZipCode(),
+							contact.getPhoneNumber(), contact.getEmailId(),contact.getDate());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+				addStatus.put(contact.hashCode(),true);
+			};
+			Thread thread=new Thread(task,contact.getFirstName());
+			thread.start();
+		}
+		while(addStatus.containsValue(false)) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }
