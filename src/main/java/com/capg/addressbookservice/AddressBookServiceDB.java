@@ -243,4 +243,16 @@ public class AddressBookServiceDB {
 			}
 		}
 	}
+	/**
+	 * UC22 RestAPI
+	 */
+	public void addNewContactsUsingRestAPI(List<Contacts> contaList) throws DBServiceException {
+		for (Contacts c : contaList) {
+			insertNewContactToDB(c.getFirstName(),c.getLastName(),c.getAddress_name(),c.getAddressType(),c.getAddress(),
+								  c.getCityName(),c.getStateName(),c.getZipCode(),c.getPhoneNumber(),c.getEmailId(),c.getDate());
+		}
+	}
+	public int entryCount() throws DBServiceException {
+		return viewAddressBook().size();
+	}
 }
